@@ -1,6 +1,6 @@
 # Tasks list
 
-## Small project based on HTML, JS (JQuery), Web SQL.
+## Small project based on HTML, CSS, JavaScript, Web SQL.
 
 ## Tech stack:
 
@@ -8,7 +8,11 @@
 
 ### CSS,
 
+### Bootstrap,
+
 ### JavaScript,
+
+### JQuery,
 
 ### SQL.
 
