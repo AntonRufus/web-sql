@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.css" />
+    <script type="text/javascript" src="js/jquery.js"></script>
+    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"/> -->
+    <link rel="icon" type="image/png" href="./pic/favicon.png" />
+    <link rel="shortcut icon" type="image/x-icon" href="./pic/favicon.ico" />
+    <title>Web SQL Database</title>
+  </head>
+
+  <body class="m30">
+    <!-- HTML -->
+    <div class="container">
+      <div class="flex-row-reverse">
+        <form>
+          <p>
+            <small>
+              <b>Note:</b> Please use <i>Vivaldi</i>, <i>Chrome</i>,
+              <i>Opera</i> or other browser that supports
+              <a href="https://caniuse.com/?search=web%20sql" target="_blank">
+                Web SQL
+              </a>
+            </small>
+          </p>
+          <fieldset>
+            <legend>Item name</legend>
+            <input type="text" name="input" id="item" class="form-control" />
+            <br />
+            <legend>Quantity</legend>
+            <input
+              type="number"
+              name="quantity"
+              id="quantity"
+              class="form-control"
+            />
+            <hr />
+            <div class="buttons">
+              <button id="insert" class="btn btn-info mt10">Insert</button>
+              <button id="create" class="btn btn-success mt10">
+                Create Table
+              </button>
+              <button id="remove" class="btn btn-danger mt10">
+                Delete Table
+              </button>
+              <button id="list" class="btn btn-warning mt10">
+                Fetch Record
+              </button>
+              <!-- type="button"  -->
+              <p>
+                <small>
+                  <b>Note:</b> Table must be created first before inserting or
+                  performing any transaction
+                </small>
+              </p>
+            </div>
+          </fieldset>
+        </form>
+      </div>
+      <hr />
+
+      <div class="record">Record</div>
+      <p>
+        <small>
+          <b>Note:</b> To change the name or quantity click to the corrsponding
+          value
+        </small>
+      </p>
+      <table class="table table-bordered table-hover" id="itemlist"></table>
+    </div>
+
+    <!-- JavaScript -->
+    <script type="text/javascript">
+      let db = openDatabase("itemDB", "1.0", "itemDB", 65535); // itemDB is the database name
+
+      $(function () {
+        loadData();
+
+        //TO CREATE TABLE - STARTS
+        $("#create").click(function () {
+          db.transaction(function (transaction) {
+            let item = "item";
+            let quantity = "#quantity";
+            let sql =
+              "CREATE TABLE items " +
+              "(id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," +
+              "item VARCHAR(100) NOT NULL," +
+              "quantity INT(5) NOT NULL)";
+
+            transaction.executeSql(
+              sql,
+              undefined,
+              function () {
+                alert("Table is CREATED successfully");
+              },
+              function (transaction, err) {
+                if (
+                  err.message ==
+                  "could not prepare statement (1 no such table: items)"
+                ) {
+                  alert("Create the table");
+                } else {
+                  if (
+                    err.message ==
+                    "could not prepare statement (1 table items already exists)"
+                  ) {
+                    // alert("Table is already being created");
+                  } else {
+                    alert(err.message);
+                  }
+                }
+              }
+            );
+          });
+
+          loadData();
+        });
+        //CREATE ENDS
+
+        //TO DELETE TABLE - STARTS
+        $("#remove").click(function () {
+          if (!confirm("Are you sure to delete this table?", "")) return;
+
+          db.transaction(function (transaction) {
+            let sql = "DROP TABLE items";
+            transaction.executeSql(
+              sql,
+              undefined,
+              function () {
+                alert("Table is DELETED successfully");
+              },
+              function (transaction, err) {
+                if (
+                  err.message ==
+                  "could not prepare statement (1 no such table: items)"
+                ) {
+                  alert("Create the table");
+                } else {
+                  alert(err.message);
+                }
+              }
+            );
+          });
+
+          loadData();
+        });
+        //DELETE ENDS
+
+        //TO INSERT - STARTS
+        $("#insert").click(function () {
+          let item = $("#item").val();
+          let quantity = $("#quantity").val();
+
+          db.transaction(function (transaction) {
+            let sql = "INSERT INTO items(item, quantity) VALUES(?, ?)";
+            transaction.executeSql(
+              sql,
+              [item, quantity],
+              function () {
+                // alert("New item is ADDED successfully");
+              },
+              function (transaction, err) {
+                if (
+                  err.message ==
+                  "could not prepare statement (1 no such table: items)"
+                ) {
+                  alert("Create the table");
+                } else {
+                  alert(err.message);
+                }
+              }
+            );
+          });
+
+          loadData();
+        });
+        //INSERT ENDS
+
+        //TO FETCH - STARTS
+        $("#list").click(function () {
+          loadData();
+        });
+        //FETCH ENDS
+
+        //TO LOAD DATA - STARTS
+        function loadData() {
+          $("#itemlist").children().remove();
+
+          $("#itemlist").append(
+            "<tr><td class='text-center'>" +
+              "<h4>ID</h4>" +
+              "</td><td class='text-center'>" +
+              "<h4>ITEMS</h4>" +
+              "</td><td class='text-center'>" +
+              "<h4>QTY</h4>" +
+              "</td><td class='text-center'>" +
+              "<h4>DEL</h4>" +
+              "</td></tr>"
+          );
+
+          db.transaction(function (transaction) {
+            // let sql = "SELECT * FROM items ORDER BY id DESC";
+            let sql = "SELECT * FROM items ORDER BY id ASC";
+            transaction.executeSql(
+              sql,
+              undefined,
+              function (transaction, result) {
+                if (result.rows.length) {
+                  for (let i = 0; i < result.rows.length; i++) {
+                    let row = result.rows.item(i);
+                    let item = row.item;
+                    let id = row.id;
+                    let quantity = row.quantity;
+                    $("#itemlist").append(
+                      "<tr id='del" +
+                        id +
+                        "'><td  class='text-center'>" +
+                        id +
+                        '</td><td id="updatename"' +
+                        id +
+                        '" class="updatename col-xs-8" data-id="' +
+                        id +
+                        '">' +
+                        item +
+                        '</td><td id="updateqty' +
+                        id +
+                        '" class="updateqty text-center" data-id="' +
+                        id +
+                        '">' +
+                        quantity +
+                        '</td><td class="text-center"><a href="#" class="btn btn-danger deleteitem" data-id="' +
+                        id +
+                        '">x</a>' +
+                        // &nbsp;<a href="#" class="btn btn-primary updateitem" data-id="' + id +'">↑</a>
+                        "</td>" +
+                        "</tr>"
+                    );
+                    // console.log(db);
+                    // console.log(result);
+                    console.log("|", id, "|", item, "|", quantity, "|");
+                  }
+                } else {
+                  $("#itemlist").append(
+                    "<tr><td colspan='4' align='center'>No item Found</td></tr>"
+                  );
+                }
+              },
+              function (transaction, err) {
+                if (
+                  err.message ==
+                  "could not prepare statement (1 no such table: items)"
+                ) {
+                  alert("Create the table");
+                } else {
+                  alert(err.message);
+                }
+              }
+            );
+          });
+          //LOAD ENDS
+
+          setTimeout(function () {
+            //DELETE FUNCTION STARTS
+            $(".deleteitem").click(function () {
+              let id = $(this).data("id");
+
+              db.transaction(function (transaction) {
+                let sql = "DELETE FROM items WHERE id=(?)";
+                transaction.executeSql(
+                  sql,
+                  [id],
+                  function () {
+                    // alert("DELETED successfully");
+                    // loadData();
+                    $("#del" + id).fadeOut("slow");
+                  },
+                  function (transaction, err) {
+                    if (
+                      err.message ==
+                      "could not prepare statement (1 no such table: items)"
+                    ) {
+                      alert("Create the table");
+                    } else {
+                      alert(err.message);
+                    }
+                  }
+                );
+              });
+            });
+            //DELETE ENDS
+
+            //UPDATE QUANTITY FUNCTION STARTS
+            $(".updateqty").click(function () {
+              let id = $(this).data("id");
+              let newqty = parseInt(
+                prompt("Kindly enter new quantity (NUMBERS ONLY)")
+              );
+
+              if (newqty !== null) {
+                db.transaction(function (transaction) {
+                  let sql = "UPDATE items SET quantity=(?) WHERE id=(?)";
+                  transaction.executeSql(
+                    sql,
+                    [newqty, id],
+                    function () {
+                      // alert("Updated");
+                      $("#newqty" + id).html(newqty);
+                    },
+                    function (transaction, err) {
+                      if (
+                        err.message ==
+                        "could not prepare statement (1 no such table: items)"
+                      ) {
+                        alert("Create the table");
+                      }
+                      if (newqty !== Number) {
+                        // alert("Only NUMBER aceptable");
+                        // window.reload();
+                      } else {
+                        alert(err.message);
+                      }
+                    }
+                  );
+                });
+
+                loadData();
+              }
+            });
+            //UPDATE ENDS
+
+            //UPDATE NAME FUNCTION STARTS
+            $(".updatename").click(function () {
+              let id = $(this).data("id");
+              let newitem = prompt("Kindly enter new name");
+
+              if (newitem !== null) {
+                db.transaction(function (transaction) {
+                  let sql = "UPDATE items SET item=(?) WHERE id=(?)";
+                  transaction.executeSql(
+                    sql,
+                    [newitem, id],
+                    function () {
+                      // alert("Updated");
+                      $("#updatename" + id).html(newitem);
+                    },
+                    function (transaction, err) {
+                      if (
+                        err.message ==
+                        "could not prepare statement (1 no such table: items)"
+                      ) {
+                        alert("Create the table");
+                      } else {
+                        alert(err.message);
+                      }
+                    }
+                  );
+                });
+
+                loadData();
+              }
+            });
+            //UPDATE ENDS
+          }, 1000);
+        }
+      });
+    </script>
+  </body>
+</html>
