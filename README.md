@@ -1,4 +1,4 @@
-# Tasks list
+# Shopping list 🛒
 
 ## Small project based on HTML, CSS, JavaScript, Web SQL.
 
