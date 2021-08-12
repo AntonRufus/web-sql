@@ -2,6 +2,8 @@
 
 ## Small project based on HTML, CSS, JavaScript, Web SQL.
 
+#### https://antonrufus.github.io/web-sql/
+
 ## Tech stack:
 
 ### HTML,
